@@ -5,6 +5,7 @@ let order = 0; // holds index of next tab in the orderSequence
 let count = 3; // count down variable
 let orderSequence = [];
 const btnColors = ["green", "red", "blue", "yellow"];
+victorySound = new Audio("./sounds/applause.wav")
 
 const maxLevel = document.querySelector("#level");
 const heading = document.querySelector("#heading");
@@ -81,6 +82,8 @@ startBtn.addEventListener("click", start);
 
 function start() {
   removeMsg();
+  victorySound.pause();
+  victorySound.currentTime = 0;
   btnContainer.removeEventListener("click", shakeBtn);
   startBtn.classList.add("fade-out");
   startBtn.classList.add("hidden");
@@ -162,6 +165,7 @@ function verifyBtn(event) {
   order++;
   if (order === orderSequence.length) {
     if (orderSequence.length === defaultMaxLevel) {
+      victorySound.play()
       winMsg.classList.remove("hidden");
       winMsg.classList.add("fade-in");
       displayScreen.classList.add("fade-out");
