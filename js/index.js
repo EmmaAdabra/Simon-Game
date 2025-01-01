@@ -5,7 +5,7 @@ let order = 0; // holds index of next tab in the orderSequence
 let count = 3; // count down variable
 let orderSequence = [];
 const btnColors = ["green", "red", "blue", "yellow"];
-victorySound = new Audio("./sounds/applause.wav")
+victorySound = new Audio("./sounds/applause.wav");
 
 const maxLevel = document.querySelector("#level");
 const heading = document.querySelector("#heading");
@@ -13,7 +13,9 @@ const startBtn = document.querySelector("#start-btn");
 const countElem = document.querySelector("#count-down");
 const hint = document.querySelector("#hint");
 const gameBtns = document.querySelectorAll(`[data-btn]`);
-const displayScreen = document.querySelector("#screen-wrapper"); // display game level
+const displayScreen = document.querySelector("#screen-wrapper");
+
+// display game level
 const levelValue = document.querySelector("#level-value");
 const btnContainer = document.querySelector("#btn-wrapper");
 const gameBg = document.querySelector("#gameBg");
@@ -45,8 +47,8 @@ gameBg.addEventListener("pointerup", (event) => {
     gameDetails.classList.remove("visible");
     showMenu.classList.add("show");
     exitMenu.classList.add("hidden");
-    event.stopPropagation()
-    event.preventDefault()
+    event.stopPropagation();
+    event.preventDefault();
   }
 });
 
@@ -67,10 +69,31 @@ function shakeBtn() {
   }, 1200);
 }
 
-maxLevel.addEventListener("input", () => {
-  defaultMaxLevel = parseInt(maxLevel.value);
-  removeMsg();
-  restartGame();
+function printErrMsg(flag) {
+  if (flag == "min") alert("Minimum max game level is 3");
+
+  if (flag == "max") alert("Max game level is 10");
+}
+
+maxLevel.addEventListener("change", () => {
+  if (maxLevel.value < 3) {
+    maxLevel.value = defaultMaxLevel;
+    console.log("Minimum max game level is 3");
+  }
+
+  if (maxLevel.value > 10) {
+    maxLevel.value = defaultMaxLevel;
+    printErrMsg("max");
+  }
+
+  if (maxLevel.value == "" || maxLevel.value == defaultMaxLevel) {
+    maxLevel.value = defaultMaxLevel;
+  } else {
+    defaultMaxLevel = parseInt(maxLevel.value);
+    console.log(maxLevel.value);
+    removeMsg();
+    restartGame();
+  }
 });
 
 function checkGameMode() {
@@ -165,7 +188,7 @@ function verifyBtn(event) {
   order++;
   if (order === orderSequence.length) {
     if (orderSequence.length === defaultMaxLevel) {
-      victorySound.play()
+      victorySound.play();
       winMsg.classList.remove("hidden");
       winMsg.classList.add("fade-in");
       displayScreen.classList.add("fade-out");
@@ -257,4 +280,52 @@ function gameOver() {
     gameBg.classList.remove("game-over");
   }, 200);
   restartGame();
+  // setTimeout(() => {
+  //   alert("You pressed the wrong tab, try again")
+  // }, 400);
 }
+
+// select dropdowns with input
+function initializeCustomSelect(container) {
+  const inputField = container.querySelector(".custom-select-input");
+  const optionsContainer = container.querySelector(".custom-options");
+  const options = container.querySelectorAll(".custom-options .option");
+
+  // Show options when input is focused
+  inputField.addEventListener("focus", () => {
+    optionsContainer.style.display = "block";
+  });
+
+  // Hide options when clicking outside the container
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".custom-select-container")) {
+      optionsContainer.style.display = "none";
+    }
+  });
+
+  // Select an option
+  options.forEach((option) => {
+    option.addEventListener("click", () => {
+      inputField.value = option.textContent.trim();
+      inputField.dispatchEvent(new Event("change"));
+      optionsContainer.style.display = "none";
+    });
+  });
+
+  // Filter options based on input
+  // inputField.addEventListener("input", () => {
+  //   const filter = inputField.value.toLowerCase();
+  //   options.forEach((option) => {
+  //     if (option.textContent.toLowerCase().includes(filter)) {
+  //       option.style.display = "block";
+  //     } else {
+  //       option.style.display = "none";
+  //     }
+  //   });
+  // });
+}
+
+// Initialize all custom select elements on the page
+document.querySelectorAll(".custom-select-container").forEach((container) => {
+  initializeCustomSelect(container);
+});
