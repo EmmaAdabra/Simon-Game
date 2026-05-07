@@ -13,7 +13,7 @@ const startBtn = document.querySelector("#start-btn");
 const countElem = document.querySelector("#count-down");
 const hint = document.querySelector("#hint");
 const gameBtns = document.querySelectorAll(`[data-btn]`);
-const displayScreen = document.querySelector("#screen-wrapper");
+const displayScreen = document.querySelector("#screen-wrapper"); 
 
 // display game level
 const levelValue = document.querySelector("#level-value");
@@ -69,28 +69,28 @@ function shakeBtn() {
   }, 1200);
 }
 
-function printErrMsg(flag) {
-  if (flag == "min") alert("Minimum max game level is 3");
-
-  if (flag == "max") alert("Max game level is 10");
+function printErrMsg(flag){
+    if(flag == "min") alert("Minimum max game level is 3")
+    
+    if(flag == "max") alert("Max game level is 10")
 }
 
 maxLevel.addEventListener("change", () => {
-  if (maxLevel.value < 3) {
-    maxLevel.value = defaultMaxLevel;
-    console.log("Minimum max game level is 3");
+  if(maxLevel.value < 3) {
+    maxLevel.value = defaultMaxLevel
+    console.log("Minimum max game level is 3")
   }
 
-  if (maxLevel.value > 10) {
-    maxLevel.value = defaultMaxLevel;
-    printErrMsg("max");
+  if(maxLevel.value > 10) {
+    maxLevel.value = defaultMaxLevel
+    printErrMsg("max")
   }
 
-  if (maxLevel.value == "" || maxLevel.value == defaultMaxLevel) {
-    maxLevel.value = defaultMaxLevel;
+  if(maxLevel.value == "" || maxLevel.value == defaultMaxLevel) {
+    maxLevel.value = defaultMaxLevel
   } else {
     defaultMaxLevel = parseInt(maxLevel.value);
-    console.log(maxLevel.value);
+    console.log(maxLevel.value)
     removeMsg();
     restartGame();
   }
@@ -307,7 +307,7 @@ function initializeCustomSelect(container) {
   options.forEach((option) => {
     option.addEventListener("click", () => {
       inputField.value = option.textContent.trim();
-      inputField.dispatchEvent(new Event("change"));
+      inputField.dispatchEvent(new Event('change'));
       optionsContainer.style.display = "none";
     });
   });

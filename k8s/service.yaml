@@ -1,0 +1,65 @@
+# =============================================================================
+# Service — simon-game
+# =============================================================================
+#
+# What a Service does:
+#   Gives a stable network identity (IP + DNS name + port) to a group of Pods
+#   that come and go. Without a Service, you'd have to chase Pod IPs every time
+#   a Pod restarts (Pod IPs change on every restart).
+#
+# Why NodePort for your setup?
+#   Your cluster was built with kubeadm on OCI VMs — no cloud load balancer
+#   integration is set up (that needs the OCI Cloud Controller Manager).
+#   NodePort is the simplest exposure method that works out of the box on any
+#   kubeadm cluster: it opens a port on EVERY node (control plane + worker)
+#   and forwards traffic to the matching Pods.
+#
+#   Other types for context:
+#     ClusterIP    → internal only (no external access). Default type.
+#     NodePort     → opens a port on each node. External traffic: nodeIP:nodePort
+#     LoadBalancer → provisions a cloud LB (needs cloud provider integration).
+#     Ingress      → HTTP routing layer on top of a Service (needs ingress controller).
+#
+# =============================================================================
+
+apiVersion: v1
+kind: Service
+
+metadata:
+  name: simon-game-svc     # Stable DNS name inside the cluster: simon-game-svc.default.svc.cluster.local
+
+spec:
+  # --------------------------------------------------------------------------
+  # type: NodePort
+  #   Opens <nodePort> on the worker node's network interface.
+  #   Traffic flow: browser → workerNodePublicIP:nodePort
+  #                 → Service → Pod:targetPort (80)
+  # --------------------------------------------------------------------------
+  type: NodePort
+
+  # --------------------------------------------------------------------------
+  # selector: which Pods to send traffic to.
+  # Must match Deployment template.metadata.labels (app: simon-game).
+  # This is how Service and Deployment are "linked" — only by label, no hard ref.
+  # --------------------------------------------------------------------------
+  selector:
+    app: simon-game
+
+  ports:
+    - name: http
+      protocol: TCP
+
+      # port: the port the Service itself listens on INSIDE the cluster.
+      # Other services inside the cluster would call simon-game-svc:80.
+      port: 80
+
+      # targetPort: the port on the Pod/container to forward to.
+      # Must match containerPort in Deployment (nginx listens on 80).
+      targetPort: 80
+
+      # nodePort: the port opened on EVERY node's network interface.
+      # Range: 30000–32767 (kubeadm default).
+      # You must open this port in your OCI Security List / NSG inbound rules.
+      # If you omit nodePort, K8s assigns one randomly in the range — fine for
+      # learning but harder to configure firewall rules ahead of time.
+      nodePort: 30080

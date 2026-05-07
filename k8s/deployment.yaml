@@ -1,0 +1,108 @@
+# =============================================================================
+# Deployment — simon-game
+# =============================================================================
+#
+# What a Deployment does:
+#   Tells Kubernetes: "keep N identical Pods running; if one dies, create a new
+#   one; if I push a new image, roll it out without downtime."
+#
+# Why not run a Pod directly?
+#   A bare Pod has no self-healing. Deployment wraps the Pod spec with a
+#   ReplicaSet controller that watches and reconciles desired vs actual state.
+#
+# =============================================================================
+
+apiVersion: apps/v1        # API group that owns the Deployment resource
+kind: Deployment
+
+metadata:
+  name: simon-game         # Name used by kubectl and referenced by nothing else here
+  labels:
+    app: simon-game        # Metadata label — used for filtering (kubectl get pods -l app=simon-game)
+
+spec:
+  # --------------------------------------------------------------------------
+  # replicas: how many identical Pods to keep alive on the worker node(s).
+  # 1 is fine for learning. In prod you'd use 2+ for availability.
+  # --------------------------------------------------------------------------
+  replicas: 1
+
+  # --------------------------------------------------------------------------
+  # selector: how the Deployment finds "its" Pods.
+  # Must match template.metadata.labels below — K8s enforces this.
+  # --------------------------------------------------------------------------
+  selector:
+    matchLabels:
+      app: simon-game
+
+  # --------------------------------------------------------------------------
+  # template: the Pod blueprint (every Pod the Deployment creates looks like this)
+  # --------------------------------------------------------------------------
+  template:
+    metadata:
+      labels:
+        app: simon-game    # Must match selector.matchLabels above
+
+    spec:
+      containers:
+        - name: simon-game-nginx   # Name of the container inside the Pod (can differ from image name)
+
+          # ------------------------------------------------------------------
+          # image: your Docker Hub image pushed earlier.
+          # imagePullPolicy:
+          #   Always    → always pull from registry (safe for mutable tags like :dev)
+          #   IfNotPresent → use local cache if present (fine for immutable/hashed tags)
+          #
+          # Using :dev (mutable tag) → Always is the right call so you always
+          # get the latest push when a Pod is recreated.
+          # ------------------------------------------------------------------
+          image: emmanueladb/simon-game:dev
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 80  # Port nginx listens on INSIDE the container.
+                                 # Must match EXPOSE in Dockerfile and Service.targetPort.
+
+          # ------------------------------------------------------------------
+          # Resources: tell the scheduler how much CPU/RAM this container needs
+          # and the hard ceiling it cannot exceed.
+          #
+          # requests: minimum guaranteed. Scheduler uses this to pick a node.
+          # limits:   hard cap. Container is OOM-killed or throttled if exceeded.
+          #
+          # For a static nginx: these are intentionally tiny.
+          # Always set both in real workloads — unbounded containers can starve
+          # other pods on the same node.
+          # ------------------------------------------------------------------
+          resources:
+            requests:
+              cpu: "50m"        # 50 millicores = 0.05 of 1 CPU core
+              memory: "32Mi"    # 32 mebibytes
+            limits:
+              cpu: "100m"
+              memory: "64Mi"
+
+          # ------------------------------------------------------------------
+          # livenessProbe: K8s restarts the container if this fails repeatedly.
+          # "Is the process still alive and able to respond?"
+          #
+          # readinessProbe: K8s only sends traffic when this passes.
+          # "Is the container ready to serve requests?"
+          #
+          # For nginx serving static files an HTTP GET / is the simplest check.
+          # initialDelaySeconds: give nginx a moment to start before first check.
+          # periodSeconds: how often to check.
+          # ------------------------------------------------------------------
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 10
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 3
+            periodSeconds: 5
